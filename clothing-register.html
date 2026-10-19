@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>새 옷 등록</title>
+  <style>
+    :root {
+      --navy: #0f172a;
+      --ink: #0f172a;
+      --steel: #94a3b8;
+      --line: #dce3ec;
+      --muted: #7c899b;
+      --panel: #f5f7fa;
+      --white: #fff;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 32px;
+      min-height: 100vh;
+      color: var(--ink);
+      background: radial-gradient(circle at 50% 0%, #e6e9ed 0, #c9cdd1 58%, #aeb4b8 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .modal {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      background: rgba(255,255,255,.97);
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 18px;
+      box-shadow: 0 18px 55px rgba(15,23,42,.15);
+      overflow: hidden;
+    }
+    .header {
+      display: flex; align-items: center; gap: 22px;
+      padding: 28px 36px 24px;
+      border-bottom: 1px solid #edf0f4;
+    }
+    .brand-icon { width: 52px; height: 52px; color: #385475; flex: none; }
+    h1 { margin: 0 0 8px; font-size: 25px; letter-spacing: -.7px; }
+    .subtitle { margin: 0; color: var(--muted); font-size: 14px; }
+    .close {
+      margin-left: auto; border: 0; background: transparent;
+      color: #7d8795; font-size: 28px; line-height: 1; padding: 4px 0 8px 12px;
+    }
+    .content { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, .95fr); }
+    .form-side { padding: 20px 20px 12px 36px; }
+    .preview-side {
+      padding: 22px 24px; margin: 0 20px 0 0;
+      background: linear-gradient(135deg, #f8fafc, #f2f5f8);
+      border-radius: 14px 14px 0 0;
+    }
+    .upload {
+      min-height: 235px; border: 1.5px dashed #b7c9e2; border-radius: 12px;
+      background: #f7f9fc; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 10px;
+      text-align: center; padding: 22px; color: #263b56;
+    }
+    .upload svg { width: 44px; height: 44px; }
+    .upload strong { font-size: 16px; font-weight: 650; }
+    .upload small { color: var(--muted); font-size: 13px; }
+    .upload-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 1px solid var(--line); border-radius: 999px; background: #fff;
+      color: #263449; padding: 12px 20px; font-size: 13px; font-weight: 600;
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px #0f172a12; }
+    .btn.primary { background: #1b2c43; color: white; border-color: #1b2c43; }
+    .btn svg { width: 17px; height: 17px; }
+    .field { margin-top: 24px; min-width: 0; }
+    .field label, .field-label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+    .required { color: #e5484d; }
+    input[type="text"], select, textarea {
+      width: 100%; border: 1px solid var(--line); border-radius: 15px;
+      padding: 13px 15px; color: #263449; background: white; outline: none;
+      box-shadow: inset 0 1px 2px #0f172a05;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #8ba4c4; box-shadow: 0 0 0 3px #94a3b81f; }
+    input::placeholder, textarea::placeholder { color: #9aa6b6; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+    .two-col .field { margin-top: 24px; }
+    select { appearance: auto; }
+    .seasons { display: flex; flex-wrap: wrap; gap: 12px; }
+    .season {
+      border: 1px solid var(--line); background: #fff; border-radius: 17px;
+      min-width: 120px; padding: 13px 16px; display: flex; gap: 10px;
+      align-items: center; justify-content: center; color: #344256; font-size: 13px;
+    }
+    .season input { accent-color: #1b2c43; width: 17px; height: 17px; margin: 0; }
+    .season:has(input:checked) { background: #edf1f6; border-color: #e0e6ee; }
+    .color-select { display: flex; align-items: center; gap: 12px; }
+    .color-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px #d8dee7; flex: none; }
+    .color-select select { border: 0; box-shadow: none; padding-left: 0; }
+    .swatches { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+    .swatch {
+      width: 105px; height: 36px; border-radius: 12px; border: 1px solid #dce3ec;
+      position: relative; padding: 0;
+    }
+    .swatch.active { outline: 2px solid #e5484d; outline-offset: 2px; }
+    .swatch.active::after { content: "✓"; color: white; position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; }
+    .color-pick { margin-left: auto; padding: 10px 16px; }
+    .color-pick input { width: 22px; height: 22px; border: 0; background: transparent; padding: 0; }
+    textarea { min-height: 84px; resize: vertical; font-size: 13px; }
+    .memo-count { text-align: right; color: #98a2b1; font-size: 11px; margin-top: 5px; }
+    .preview-title { font-weight: 750; font-size: 15px; margin: 0 0 18px; }
+    .image-preview {
+      position: relative; height: 265px; border-radius: 13px; border: 1px solid #e2e8f0;
+      background: radial-gradient(circle, #fff, #edf1f6); display: grid; place-items: center; overflow: hidden;
+    }
+    .image-preview img { width: 100%; height: 100%; object-fit: contain; display: none; }
+    .image-preview img.visible { display: block; }
+    .shirt-placeholder { width: 70%; max-width: 245px; color: #b7c3d2; }
+    .remove-image {
+      position: absolute; right: 12px; top: 12px; border: 0; border-radius: 50%;
+      background: white; width: 28px; height: 28px; font-size: 18px; color: #334155;
+    }
+    .preview-actions { display: grid; grid-template-columns: 1fr 58px; gap: 12px; margin-top: 12px; }
+    .preview-actions .btn { border-radius: 12px; padding: 10px; }
+    .section-line { border: 0; border-top: 1px solid #e6ebf1; margin: 22px 0; }
+    .recommended { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .recommended button { border: 1px solid #e0e6ee; border-radius: 10px; height: 67px; padding: 8px; text-align: left; }
+    .recommended button span { display: block; color: #fff; height: 100%; border-radius: 7px; }
+    .recommended button small { display: block; color: #718096; font-size: 11px; margin-top: 7px; }
+    .color-names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; font-size: 11px; color: #718096; }
+    .color-names strong { display: block; font-weight: 500; margin-bottom: 5px; }
+    .ai-note { display: flex; gap: 12px; background: #eaf0f7; border-radius: 12px; padding: 16px; margin-top: 28px; color: #29415e; }
+    .ai-note svg { flex: none; width: 21px; height: 21px; }
+    .ai-note strong { display: block; font-size: 14px; margin-bottom: 8px; }
+    .ai-note p { margin: 0; color: #718096; font-size: 12px; line-height: 1.7; }
+    .footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 15px;
+      padding: 18px 26px; border-top: 1px solid #edf0f4; background: #fff;
+    }
+    .footer .btn { min-width: 190px; padding: 16px 24px; }
+    .footer .primary { min-width: 280px; }
+    .hidden { display: none !important; }
+    @media (max-width: 850px) {
+      body { padding: 14px; }
+      .header { padding: 22px; gap: 14px; }
+      .content { grid-template-columns: 1fr; }
+      .form-side { padding: 18px 22px; }
+      .preview-side { margin: 0 14px; border-radius: 14px; }
+      .image-preview { height: 300px; }
+      .footer { padding: 16px 20px; }
+    }
+    @media (max-width: 520px) {
+      body { padding: 0; background: #fff; }
+      .modal { border-radius: 0; border: 0; }
+      .header { padding: 20px 16px; }
+      h1 { font-size: 21px; }
+      .subtitle { font-size: 12px; line-height: 1.5; }
+      .brand-icon { width: 42px; height: 42px; }
+      .form-side { padding: 14px 16px 22px; }
+      .two-col { grid-template-columns: 1fr; gap: 0; }
+      .field { margin-top: 20px; }
+      .season { min-width: calc(50% - 6px); }
+      .swatch { flex: 1; width: auto; }
+      .color-pick { margin-left: 0; }
+      .footer { position: sticky; bottom: 0; }
+      .footer .btn { min-width: 0; flex: 1; padding: 14px 8px; }
+      .footer .primary { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="modal" aria-labelledby="page-title">
+    <header class="header">
+      <svg class="brand-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M32 8c-4 0-7 3-7 7s3 7 7 7 7-3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M32 22 19 28 13 52q19 7 38 0l-6-24-13-6Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="m25 25 7 8 7-8M32 33v19M20 31l-2 17M44 31l2 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1 id="page-title">새 옷 등록</h1>
+        <p class="subtitle">소중한 옷을 간편하게 등록하고, 더 체계적으로 관리해보세요.</p>
+      </div>
+      <button class="close" type="button" aria-label="닫기" onclick="if(confirm('작성 중인 내용을 닫을까요?')) location.reload()">×</button>
+    </header>
+
+    <form id="clothing-form">
+      <div class="content">
+        <section class="form-side">
+          <div class="upload" id="upload-area">
+            <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <rect x="5" y="8" width="26" height="32" rx="5" stroke="#486486" stroke-width="2"/>
+              <circle cx="14" cy="18" r="3" stroke="#486486" stroke-width="2"/>
+              <path d="m24 31 7-8 11 11a3 3 0 0 1-3 5H24" stroke="#486486" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M37 3v12M31 9h12" stroke="#486486" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <strong>옷 사진 추가하기</strong>
+            <small>JPG · PNG · WebP · 최대 10MB</small>
+            <div class="upload-actions">
+              <button class="btn primary" type="button" id="choose-file">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                파일 선택
+              </button>
+              <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+              <button class="btn" type="button" id="camera-button">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h4l1.5-2h5L16 7h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="13" r="3.5" stroke="currentColor" stroke-width="1.7"/></svg>
+                카메라로 촬영
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="clothing-name">옷 이름 <span class="required">*</span></label>
+            <input id="clothing-name" name="name" type="text" placeholder="예) 네이비 맨투맨, 화이트 셔츠" required />
+          </div>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="type">종류 <span class="required">*</span></label>
+              <select id="type" name="type" required>
+                <option value="상의">♧　상의</option><option>하의</option><option>아우터</option><option>원피스</option><option>신발</option><option>가방</option><option>액세서리</option><option>기타</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="location">보관 위치</label>
+              <select id="location" name="location">
+                <option>안방 옷장</option><option>드레스룸</option><option>서랍장</option><option>현관 수납장</option><option>세탁 바구니</option><option>기타</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="condition">상태</label>
+              <select id="condition" name="condition">
+                <option>사용 가능</option><option>세탁 필요</option><option>수선 필요</option><option>보관 중</option><option>나눔 예정</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ownership">소유 구분</label>
+              <select id="ownership" name="ownership">
+                <option>내 소유</option><option>가족 소유</option><option>공용</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field-label">계절</span>
+            <div class="seasons">
+              <label class="season"><input type="checkbox" name="season" value="봄" checked /> <span>♧　봄</span></label>
+              <label class="season"><input type="checkbox" name="season" value="여름" /> <span>여름</span></label>
+              <label class="season"><input type="checkbox" name="season" value="가을" checked /> <span>☼　가을</span></label>
+              <label class="season"><input type="checkbox" name="season" value="겨울" /> <span>❄　겨울</span></label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="main-color">대표 색상</label>
+            <div class="color-select">
+              <span class="color-dot" id="main-color-dot" style="background:#0f172a"></span>
+              <select id="main-color" name="color">
+                <option value="#0F172A" data-name="잉크 네이비">잉크 네이비</option>
+                <option value="#94A3B8" data-name="스틸 그레이">스틸 그레이</option>
+                <option value="#FFFFFF" data-name="스노우">스노우</option>
+                <option value="#B91C1C" data-name="버건디 레드">버건디 레드</option>
+                <option value="#166534" data-name="포레스트 그린">포레스트 그린</option>
+                <option value="#D6BFA7" data-name="베이지">베이지</option>
+                <option value="#E9AFC1" data-name="로즈 핑크">로즈 핑크</option>
+              </select>
+            </div>
+            <div class="swatches" aria-label="추천 색상">
+              <button type="button" class="swatch active" data-color="#0F172A" style="background:#0F172A" aria-label="잉크 네이비"></button>
+              <button type="button" class="swatch" data-color="#94A3B8" style="background:#94A3B8" aria-label="스틸 그레이"></button>
+              <button type="button" class="swatch" data-color="#FFFFFF" style="background:#FFFFFF" aria-label="스노우"></button>
+              <label class="btn color-pick"> <input type="color" id="custom-color" value="#0f172a" aria-label="직접 색상 선택" /> 색상 선택</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="memo">메모</label>
+            <textarea id="memo" name="memo" maxlength="500" placeholder="사이즈, 구매처, 관리 방법 등을 기록해 보세요."></textarea>
+            <div class="memo-count"><span id="memo-length">0</span>/500</div>
+          </div>
+        </section>
+
+        <aside class="preview-side">
+          <h2 class="preview-title">등록 이미지 미리보기</h2>
+          <div class="image-preview">
+            <svg class="shirt-placeholder" id="shirt-placeholder" viewBox="0 0 240 220" fill="none" aria-label="옷 이미지 자리표시자">
+              <path d="m78 30 42-16 42 16 29 14 28 62-32 18-15-31v94q-52 8-104 0V93l-15 31-32-18 28-62 29-14Z" fill="#bdc8d7"/>
+              <path d="M96 22q24 35 48 0" stroke="#aab7c8" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+            <img id="preview-image" alt="선택한 옷 미리보기" />
+            <button type="button" class="remove-image" id="remove-image" aria-label="이미지 삭제">×</button>
+          </div>
+          <div class="preview-actions">
+            <button type="button" class="btn" id="replace-image">⟳　이미지 교체</button>
+            <button type="button" class="btn" id="delete-image" aria-label="이미지 삭제">♜</button>
+          </div>
+          <hr class="section-line" />
+          <div class="field" style="margin-top:0">
+            <label for="side-color">대표 색상</label>
+            <div class="color-select" style="border:1px solid #e0e6ee;border-radius:13px;padding:4px 10px;background:#fff">
+              <span class="color-dot" id="side-color-dot" style="background:#0f172a"></span>
+              <select id="side-color" aria-label="미리보기 대표 색상">
+                <option value="#0F172A">잉크 네이비</option><option value="#94A3B8">스틸 그레이</option><option value="#FFFFFF">스노우</option><option value="#B91C1C">버건디 레드</option><option value="#166534">포레스트 그린</option><option value="#D6BFA7">베이지</option><option value="#E9AFC1">로즈 핑크</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label" style="font-weight:500;color:#7c899b">추천 색상</span>
+            <div class="recommended">
+              <button type="button" data-color="#0F172A" aria-label="잉크 네이비"><span style="background:#0F172A"></span></button>
+              <button type="button" data-color="#94A3B8" aria-label="스틸 그레이"><span style="background:#94A3B8"></span></button>
+              <button type="button" data-color="#FFFFFF" aria-label="스노우"><span style="background:#FFFFFF;border:1px solid #e2e8f0"></span></button>
+            </div>
+            <div class="color-names">
+              <div><strong>#0F172A</strong>Ink Navy</div>
+              <div><strong>#94A3B8</strong>Steel Gray</div>
+              <div><strong>#FFFFFF</strong>Snow</div>
+            </div>
+          </div>
+          <div class="ai-note">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a6 6 0 0 0-3.7 10.7c.8.6 1.2 1.4 1.2 2.3h5c0-.9.4-1.7 1.2-2.3A6 6 0 0 0 12 3Z" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 19h5M10.5 22h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <div><strong>AI 자동 인식 기능</strong><p>업로드한 이미지를 기반으로<br />색상, 종류 등을 자동으로 인식할 수 있어요.</p></div>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="footer">
+        <button class="btn" type="reset">취소</button>
+        <button class="btn primary" type="submit">옷 등록하기　→</button>
+      </footer>
+    </form>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const previewImage = document.getElementById('preview-image');
+    const placeholder = document.getElementById('shirt-placeholder');
+    let currentObjectUrl = null;
+
+    function openFilePicker(camera = false) {
+      fileInput.setAttribute('accept', 'image/jpeg,image/png,image/webp');
+      if (camera) fileInput.setAttribute('capture', 'environment');
+      else fileInput.removeAttribute('capture');
+      fileInput.click();
+    }
+    document.getElementById('choose-file').addEventListener('click', () => openFilePicker(false));
+    document.getElementById('replace-image').addEventListener('click', () => openFilePicker(false));
+    document.getElementById('camera-button').addEventListener('click', () => openFilePicker(true));
+    document.getElementById('upload-area').addEventListener('dragover', e => {
+      e.preventDefault(); e.currentTarget.style.background = '#edf3fa';
+    });
+    document.getElementById('upload-area').addEventListener('dragleave', e => e.currentTarget.style.background = '#f7f9fc');
+    document.getElementById('upload-area').addEventListener('drop', e => {
+      e.preventDefault(); e.currentTarget.style.background = '#f7f9fc';
+      if (e.dataTransfer.files.length) showImage(e.dataTransfer.files[0]);
+    });
+
+    function showImage(file) {
+      if (!file) return;
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        alert('JPG, PNG, WebP 형식의 이미지를 선택해 주세요.'); return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('이미지는 10MB 이하만 등록할 수 있어요.'); return;
+      }
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = URL.createObjectURL(file);
+      previewImage.src = currentObjectUrl;
+      previewImage.classList.add('visible');
+      placeholder.classList.add('hidden');
+    }
+    fileInput.addEventListener('change', e => showImage(e.target.files[0]));
+
+    function clearImage() {
+      previewImage.removeAttribute('src');
+      previewImage.classList.remove('visible');
+      placeholder.classList.remove('hidden');
+      fileInput.value = '';
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = null;
+    }
+    document.getElementById('remove-image').addEventListener('click', clearImage);
+    document.getElementById('delete-image').addEventListener('click', clearImage);
+
+    const mainColor = document.getElementById('main-color');
+    const sideColor = document.getElementById('side-color');
+    const mainDot = document.getElementById('main-color-dot');
+    const sideDot = document.getElementById('side-color-dot');
+    const customColor = document.getElementById('custom-color');
+
+    function setColor(color) {
+      const option = [...mainColor.options].find(o => o.value.toLowerCase() === color.toLowerCase());
+      if (option) {
+        mainColor.value = option.value;
+        sideColor.value = option.value;
+      } else {
+        const customOption = new Option('직접 선택한 색상', color);
+        mainColor.add(customOption); sideColor.add(new Option('직접 선택한 색상', color));
+        mainColor.value = color; sideColor.value = color;
+      }
+      mainDot.style.background = color;
+      sideDot.style.background = color;
+      customColor.value = color;
+      document.querySelectorAll('.swatch').forEach(el => el.classList.toggle('active', el.dataset.color.toLowerCase() === color.toLowerCase()));
+    }
+    mainColor.addEventListener('change', () => setColor(mainColor.value));
+    sideColor.addEventListener('change', () => setColor(sideColor.value));
+    customColor.addEventListener('input', () => setColor(customColor.value));
+    document.querySelectorAll('[data-color]').forEach(el => el.addEventListener('click', () => setColor(el.dataset.color)));
+
+    const memo = document.getElementById('memo');
+    memo.addEventListener('input', () => document.getElementById('memo-length').textContent = memo.value.length);
+
+    document.getElementById('clothing-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+      data.seasons = [...document.querySelectorAll('input[name="season"]:checked')].map(el => el.value);
+      data.image = fileInput.files[0]?.name || '';
+      alert('옷 정보가 입력되었습니다.\\n\\n' + JSON.stringify(data, null, 2));
+      // 실제 서비스에서는 이 지점에서 서버 API로 데이터를 저장하면 됩니다.
+    });
+    document.getElementById('clothing-form').addEventListener('reset', () => {
+      setTimeout(() => {
+        clearImage();
+        document.getElementById('memo-length').textContent = '0';
+        setColor('#0F172A');
+      }, 0);
+    });
+  </script>
+</body>
+</html>
